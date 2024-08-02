@@ -1,6 +1,6 @@
 # Blog App
 
-![Blog App Logo](https://th.bing.com/th/id/OIG1.XkhkfD4oQAQfbNMmA0Aq?w=1024&h=1024&rs=1&pid=ImgDetMain)
+![Blog App Logo](https://ibb.co.com/pJX22RR)
 
 ## 📝 Description
 
