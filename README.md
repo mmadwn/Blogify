@@ -1,7 +1,5 @@
 # Blog App
 
-![Blog App Logo](https://i.ibb.co.com/D5K4488/Screenshot-2024-08-02-225927.png)
-
 ## 📝 Description
 
 Blog App is a sleek and modern web application built with Node.js, Express.js, and EJS. It allows users to create, view, edit, and delete blog posts with a beautiful, responsive interface.
