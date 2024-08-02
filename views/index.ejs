@@ -1,17 +1,19 @@
 <%- include('partials/header') %>
-<h1>Welcome to Blog App</h1>
-<div class="posts">
-    <% posts.forEach(post => { %>
-        <article class="post">
-            <h2><%= post.title %></h2>
-            <p><%= post.content %></p>
-            <div class="actions">
-                <a href="/edit/<%= post.id %>" class="btn edit">Edit</a>
-                <form action="/delete/<%= post.id %>" method="POST">
-                    <button type="submit" class="btn delete">Delete</button>
-                </form>
-            </div>
-        </article>
-    <% }) %>
+<div class="container">
+    <h1>Welcome to Blog App</h1>
+    <div class="posts">
+        <% posts.forEach(post => { %>
+            <article class="post">
+                <h2><%= post.title %></h2>
+                <p><%= post.content %></p>
+                <div class="actions">
+                    <a href="/edit/<%= post.id %>" class="btn edit">Edit</a>
+                    <form action="/delete/<%= post.id %>" method="POST">
+                        <button type="submit" class="btn delete">Delete</button>
+                    </form>
+                </div>
+            </article>
+        <% }) %>
+    </div>
 </div>
 <%- include('partials/footer') %>
