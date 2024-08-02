@@ -1,10 +1,10 @@
-# Beautiful Blog
+# Blog App
 
-![Beautiful Blog Logo](https://example.com/path-to-your-logo.png)
+![Blog App Logo](https://th.bing.com/th/id/OIG1.XkhkfD4oQAQfbNMmA0Aq?w=1024&h=1024&rs=1&pid=ImgDetMain)
 
 ## 📝 Description
 
-Beautiful Blog is a sleek and modern web application built with Node.js, Express.js, and EJS. It allows users to create, view, edit, and delete blog posts with a beautiful, responsive interface.
+Blog App is a sleek and modern web application built with Node.js, Express.js, and EJS. It allows users to create, view, edit, and delete blog posts with a beautiful, responsive interface.
 
 ## ✨ Features
 
