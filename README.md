@@ -1,6 +1,6 @@
 # Blog App
 
-![Blog App Logo](https://ibb.co.com/pJX22RR)
+![Blog App Logo](https://i.ibb.co.com/D5K4488/Screenshot-2024-08-02-225927.png)
 
 ## 📝 Description
 
