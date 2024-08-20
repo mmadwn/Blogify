@@ -5,21 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Blog App</title>
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Source+Sans+Pro:wght@400;600&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
     <header>
       <nav>
-        <a href="/" class="logo">Blog App</a>
-        <ul>
-          <li><a href="/">Home</a></li>
-          <li><a href="/create">Create Post</a></li>
+        <div class="left-nav">
+          <a href="/" class="logo">Inspirasi</a>
+          <div class="search-container">
+            <input type="text" placeholder="Cari artikel..." class="search-input">
+            <button type="submit" class="search-button"><i class="fas fa-search" style="color: #292929;"></i></button>
+          </div>
+        </div>
+        <ul class="center-nav">
+          <li class="dropdown">
+            <a href="#" class="drop-btn">Kategori <i class="fas fa-caret-down" style="color: #292929; margin-left: 5px;"></i></a>
+            <div class="dropdown-content">
+              <div class="dropdown-column">
+                <h3>Teknologi</h3>
+                <a href="/category/teknologi/software">Software</a>
+                <a href="/category/teknologi/hardware">Hardware</a>
+                <a href="/category/teknologi/ai">AI</a>
+              </div>
+              <div class="dropdown-column">
+                <h3>Gaya Hidup</h3>
+                <a href="/category/gaya-hidup/fashion">Fashion</a>
+                <a href="/category/gaya-hidup/kuliner">Kuliner</a>
+                <a href="/category/gaya-hidup/travel">Travel</a>
+              </div>
+              <div class="dropdown-column">
+                <h3>Bisnis</h3>
+                <a href="/category/bisnis/startup">Startup</a>
+                <a href="/category/bisnis/keuangan">Keuangan</a>
+                <a href="/category/bisnis/marketing">Marketing</a>
+              </div>
+              <div class="dropdown-column">
+                <h3>Kesehatan</h3>
+                <a href="/category/kesehatan/olahraga">Olahraga</a>
+                <a href="/category/kesehatan/nutrisi">Nutrisi</a>
+                <a href="/category/kesehatan/mental">Kesehatan Mental</a>
+              </div>
+            </div>
+          </li>
         </ul>
+        <div class="right-nav">
+          <a href="/create" class="write-btn"><i class="fas fa-pen-to-square" style="color: #292929;"></i> Write</a>
+        </div>
       </nav>
     </header>
-    <main></main>
-  </body>
-</html>
+    <main>

@@ -1,19 +1,54 @@
 <%- include('partials/header') %>
-<div class="container">
-    <h1>Welcome to Blog App</h1>
-    <div class="posts">
-        <% posts.forEach(post => { %>
-            <article class="post">
-                <h2><%= post.title %></h2>
-                <p><%= post.content %></p>
-                <div class="actions">
-                    <a href="/edit/<%= post.id %>" class="btn edit">Edit</a>
-                    <form action="/delete/<%= post.id %>" method="POST">
-                        <button type="submit" class="btn delete">Delete</button>
-                    </form>
-                </div>
-            </article>
-        <% }) %>
-    </div>
+<div class="container main-content">
+    <main>
+        <h1>Selamat Datang di Blog Inspirasi</h1>
+        <div class="posts">
+            <% posts.forEach(post => { %>
+                <article class="post">
+                    <h2><%= post.title %></h2>
+                    <div class="post-meta">
+                        <span>Penulis: <%= post.author %></span>
+                        <span>Kategori: <%= post.category %></span>
+                    </div>
+                    <% if (post.image) { %>
+                        <img src="<%= post.image %>" alt="<%= post.title %>" class="post-image">
+                    <% } %>
+                    <p><%= post.content %></p>
+                    <div class="actions">
+                        <a href="/edit/<%= post.id %>" class="btn edit">Edit</a>
+                        <form action="/delete/<%= post.id %>" method="POST">
+                            <button type="submit" class="btn delete">Delete</button>
+                        </form>
+                    </div>
+                </article>
+            <% }) %>
+        </div>
+    </main>
+    <aside>
+        <section class="trending">
+            <h3>Trending Posts</h3>
+            <ul>
+                <% trendingPosts.forEach(post => { %>
+                    <li><a href="#"><%= post.title %></a></li>
+                <% }) %>
+            </ul>
+        </section>
+        <section class="categories">
+            <h3>Kategori</h3>
+            <ul>
+                <li><a href="/category/teknologi">Teknologi</a></li>
+                <li><a href="/category/gaya-hidup">Gaya Hidup</a></li>
+                <li><a href="/category/bisnis">Bisnis</a></li>
+                <li><a href="/category/kesehatan">Kesehatan</a></li>
+            </ul>
+        </section>
+        <section class="newsletter">
+            <h3>Berlangganan Newsletter</h3>
+            <form action="/subscribe" method="POST">
+                <input type="email" name="email" placeholder="Masukkan email Anda" required>
+                <button type="submit" class="btn">Berlangganan</button>
+            </form>
+        </section>
+    </aside>
 </div>
 <%- include('partials/footer') %>

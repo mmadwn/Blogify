@@ -1,0 +1,58 @@
+# Dependensi
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Produksi
+/build
+/dist
+
+# File konfigurasi
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistem operasi
+.DS_Store
+Thumbs.db
+
+# Cache
+.cache/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Compiled files
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Packages
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip

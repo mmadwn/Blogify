@@ -1,12 +1,37 @@
 <%- include('partials/header') %>
 <h1>Create a New Post</h1>
-<form action="/create" method="POST" class="post-form">
-    <label for="title">Title:</label>
+<form action="/create" method="POST" class="post-form" enctype="multipart/form-data">
+  <div class="form-group">
+    <label for="title">Judul:</label>
     <input type="text" id="title" name="title" required>
-    
-    <label for="content">Content:</label>
+  </div>
+  
+  <div class="form-group">
+    <label for="author">Penulis:</label>
+    <input type="text" id="author" name="author" required>
+  </div>
+  
+  <div class="form-group">
+    <label for="category">Kategori:</label>
+    <select id="category" name="category" required>
+      <option value="">Pilih kategori</option>
+      <option value="teknologi">Teknologi</option>
+      <option value="gaya-hidup">Gaya Hidup</option>
+      <option value="bisnis">Bisnis</option>
+      <option value="kesehatan">Kesehatan</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label for="image">Gambar:</label>
+    <input type="file" id="image" name="image" accept="image/*">
+  </div>
+  
+  <div class="form-group">
+    <label for="content">Konten:</label>
     <textarea id="content" name="content" required></textarea>
-    
-    <button type="submit" class="btn submit">Create Post</button>
+  </div>
+  
+  <button type="submit" class="btn submit">Publikasikan Artikel</button>
 </form>
 <%- include('partials/footer') %>
