@@ -302,13 +302,15 @@ main {
 aside {
     flex: 1;
     max-width: 250px;
+    border-left: 1px solid #e6e6e6; /* Tambahkan border pada margin left */
+    padding-left: 1rem; /* Tambahkan padding kiri untuk memberi ruang setelah border */
 }
 
 aside section {
-    background-color: #f9f9f9;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border-radius: 4px;
+    background-color: transparent; /* Ubah background color menjadi transparan */
+    padding: 1rem 0; /* Hapus padding atas dan bawah */
+    border-radius: 0; /* Hapus border radius */
+    border: none; /* Hapus border */
 }
 
 aside h3 {

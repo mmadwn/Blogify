@@ -54,7 +54,8 @@ app.get('/api/articles', (req, res) => {
 app.post('/api/articles', (req, res) => {
   const newArticle = {
     id: Date.now().toString(),
-    ...req.body
+    ...req.body,
+    createdAt: new Date().toISOString() // Tambahkan createdAt secara otomatis
   };
   articles.push(newArticle);
   res.status(201).json(newArticle);
