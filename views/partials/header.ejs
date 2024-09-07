@@ -10,44 +10,47 @@
     />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css" />
+    <script src="https://cdn.tiny.cloud/1/<%= TINYMCE_API_KEY %>/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <!-- Tambahkan ini sebelum penutup tag </head> -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
   <body>
     <header>
       <nav>
         <div class="left-nav">
-          <a href="/" class="logo">Inspirasi</a>
+          <a href="/" class="logo">Blogify</a>
           <div class="search-container">
-            <input type="text" placeholder="Cari artikel..." class="search-input">
+            <input type="text" placeholder="Search" class="search-input">
             <button type="submit" class="search-button"><i class="fas fa-search" style="color: #292929;"></i></button>
           </div>
         </div>
         <ul class="center-nav">
           <li class="dropdown">
-            <a href="#" class="drop-btn">Kategori <i class="fas fa-caret-down" style="color: #292929; margin-left: 5px;"></i></a>
+            <a href="#" class="drop-btn">Category <i class="fas fa-caret-down" style="color: #292929; margin-left: 5px;"></i></a>
             <div class="dropdown-content">
               <div class="dropdown-column">
-                <h3>Teknologi</h3>
-                <a href="/category/teknologi/software">Software</a>
-                <a href="/category/teknologi/hardware">Hardware</a>
-                <a href="/category/teknologi/ai">AI</a>
+                <h3>Technology</h3>
+                <a href="/category/technology/software">Software</a>
+                <a href="/category/technology/hardware">Hardware</a>
+                <a href="/category/technology/ai">AI</a>
               </div>
               <div class="dropdown-column">
-                <h3>Gaya Hidup</h3>
-                <a href="/category/gaya-hidup/fashion">Fashion</a>
-                <a href="/category/gaya-hidup/kuliner">Kuliner</a>
-                <a href="/category/gaya-hidup/travel">Travel</a>
+                <h3>Lifestyle</h3>
+                <a href="/category/lifestyle/fashion">Fashion</a>
+                <a href="/category/lifestyle/food">Food</a>
+                <a href="/category/lifestyle/travel">Travel</a>
               </div>
               <div class="dropdown-column">
-                <h3>Bisnis</h3>
-                <a href="/category/bisnis/startup">Startup</a>
-                <a href="/category/bisnis/keuangan">Keuangan</a>
-                <a href="/category/bisnis/marketing">Marketing</a>
+                <h3>Business</h3>
+                <a href="/category/business/startup">Startup</a>
+                <a href="/category/business/finance">Finance</a>
+                <a href="/category/business/marketing">Marketing</a>
               </div>
               <div class="dropdown-column">
-                <h3>Kesehatan</h3>
-                <a href="/category/kesehatan/olahraga">Olahraga</a>
-                <a href="/category/kesehatan/nutrisi">Nutrisi</a>
-                <a href="/category/kesehatan/mental">Kesehatan Mental</a>
+                <h3>Health</h3>
+                <a href="/category/health/exercise">Exercise</a>
+                <a href="/category/health/nutrition">Nutrition</a>
+                <a href="/category/health/mental">Mental Health</a>
               </div>
             </div>
           </li>

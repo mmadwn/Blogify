@@ -1,0 +1,17 @@
+<%- include('partials/header') %>
+<div class="container mt-5">
+    <h1><%= message %></h1>
+    <a href="/" class="btn btn-primary">Kembali ke Beranda</a>
+</div>
+
+<% if (locals.sweetAlert) { %>
+<script>
+    Swal.fire({
+        icon: '<%= sweetAlert.icon %>',
+        title: '<%= sweetAlert.title %>',
+        text: '<%= sweetAlert.text %>'
+    });
+</script>
+<% } %>
+
+<%- include('partials/footer') %>
