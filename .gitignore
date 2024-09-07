@@ -56,3 +56,7 @@ Thumbs.db
 *.rar
 *.tar
 *.zip
+
+# Folder upload (include the folder, but not its contents)
+/public/uploads/*
+!/public/uploads/.gitkeep
