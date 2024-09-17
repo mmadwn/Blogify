@@ -1,27 +1,50 @@
 <%- include('partials/header') %>
 <div class="container main-content">
     <main>
-        <h1>Selamat Datang di Blog Inspirasi</h1>
+        
         <div class="posts">
             <% posts.forEach(post => { %>
                 <article class="post">
-                    <h2><%= post.title %></h2>
                     <div class="post-meta">
-                        <span>Penulis: <%= post.author %></span>
-                        <span>Kategori: <%= post.category %></span>
+                        <span class="author">Author: <%= post.author %></span>
+                        <span class="category">Category: <%= post.category %></span>
                     </div>
-                    <% if (post.image) { %>
-                        <img src="<%= post.image %>" alt="<%= post.title %>" class="post-image">
-                    <% } %>
-                    <p><%= post.content %></p>
+                    <div class="post-content">
+                        <div class="post-text">
+                            <h2><a href="/article/<%= post.id %>"><%= post.title %></a></h2>
+                            <p><%= post.excerpt || (post.content && post.content.substring(0, 150)) %></p>
+                        </div>
+                        <% if (post.image) { %>
+                            <div class="post-image">
+                                <img src="<%= post.image %>" alt="<%= post.title %>">
+                            </div>
+                        <% } %>
+                    </div>
+                    <div class="post-info">
+                        <span class="date">Date: <%= new Date(post.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+                        <span class="read-time">Read time: <%= Math.ceil((post.content ? post.content.split(' ').length : 0) / 200) %> minutes</span>
+                        <span class="views">Views: <%= post.views || 0 %></span>
+                        <!-- Hapus tampilan status -->
+                    </div>
                     <div class="actions">
                         <a href="/edit/<%= post.id %>" class="btn edit">Edit</a>
-                        <form action="/delete/<%= post.id %>" method="POST">
+                        <form action="/delete/<%= post.id %>" method="POST" class="delete-form">
                             <button type="submit" class="btn delete">Delete</button>
                         </form>
                     </div>
                 </article>
             <% }) %>
+        </div>
+        <div class="pagination">
+            <% if (currentPage > 1) { %>
+                <a href="/?page=<%= currentPage - 1 %>" class="btn">Previous</a>
+            <% } %>
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <a href="/?page=<%= i %>" class="btn <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+            <% } %>
+            <% if (currentPage < totalPages) { %>
+                <a href="/?page=<%= currentPage + 1 %>" class="btn">Next</a>
+            <% } %>
         </div>
     </main>
     <aside>
@@ -34,21 +57,46 @@
             </ul>
         </section>
         <section class="categories">
-            <h3>Kategori</h3>
+            <h3>Categories</h3>
             <ul>
-                <li><a href="/category/teknologi">Teknologi</a></li>
-                <li><a href="/category/gaya-hidup">Gaya Hidup</a></li>
-                <li><a href="/category/bisnis">Bisnis</a></li>
-                <li><a href="/category/kesehatan">Kesehatan</a></li>
+                <li><a href="/category/technology">Technology</a></li>
+                <li><a href="/category/lifestyle">Lifestyle</a></li>
+                <li><a href="/category/business">Business</a></li>
+                <li><a href="/category/health">Health</a></li>
             </ul>
         </section>
         <section class="newsletter">
-            <h3>Berlangganan Newsletter</h3>
+            <h3>Subscribe to Newsletter</h3>
             <form action="/subscribe" method="POST">
-                <input type="email" name="email" placeholder="Masukkan email Anda" required>
-                <button type="submit" class="btn">Berlangganan</button>
+                <input type="email" name="email" placeholder="Enter your email" required>
+                <button type="submit" class="btn">Subscribe</button>
             </form>
         </section>
     </aside>
 </div>
 <%- include('partials/footer') %>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteForms = document.querySelectorAll('.delete-form');
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Artikel yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.submit();
+                }
+            });
+        });
+    });
+});
+</script>

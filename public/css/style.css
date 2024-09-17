@@ -177,31 +177,91 @@ main {
 }
 
 .post {
-    border-bottom: 1px solid #e6e6e6;
-    padding-bottom: 2rem;
-}
-
-.post h2 {
-    font-size: 1.8rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .post-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
     font-size: 0.9rem;
     color: #757575;
-    margin-bottom: 1rem;
+}
+
+.post-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.post-text {
+    flex: 1 1 65%;
+    padding-right: 1rem;
+    min-width: 0; /* Penting untuk text-overflow bekerja dengan flexbox */
+}
+
+.post-text h2 {
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.post-text p {
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Batasi menjadi 3 baris */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5em;
+    max-height: 4.5em; /* 3 baris * 1.5em line-height */
 }
 
 .post-image {
+    flex: 0 0 30%;
+    max-width: 30%;
+    height: 150px; /* Sesuaikan tinggi ini */
+    overflow: hidden;
+    margin-left: 1rem;
+}
+
+.post-image img {
     width: 100%;
-    max-height: 400px;
+    height: 100%;
     object-fit: cover;
+    object-position: center;
+    border-radius: 4px;
+}
+
+.post h2 {
     margin-bottom: 1rem;
+    font-size: 1.5rem;
 }
 
 .post p {
-    font-size: 1.1rem;
     margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.post-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #757575;
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e6e6e6;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 1rem;
+    margin-top: 1rem;
 }
 
 /* Forms */
@@ -302,15 +362,15 @@ main {
 aside {
     flex: 1;
     max-width: 250px;
-    border-left: 1px solid #e6e6e6; /* Tambahkan border pada margin left */
-    padding-left: 1rem; /* Tambahkan padding kiri untuk memberi ruang setelah border */
+    border-left: 1px solid #e6e6e6;
+    padding-left: 1rem;
 }
 
 aside section {
-    background-color: transparent; /* Ubah background color menjadi transparan */
-    padding: 1rem 0; /* Hapus padding atas dan bawah */
-    border-radius: 0; /* Hapus border radius */
-    border: none; /* Hapus border */
+    background-color: transparent;
+    padding: 1rem 0;
+    border-radius: 0;
+    border: none;
 }
 
 aside h3 {
@@ -375,4 +435,199 @@ aside ul li a:hover {
     .post-form {
         padding: 1rem;
     }
+}
+
+@media (max-width: 768px) {
+    .post-content {
+        flex-direction: column;
+    }
+
+    .post-text, .post-image {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .post-image {
+        margin-top: 1rem;
+        margin-left: 0;
+        height: 200px;
+    }
+
+    .post-info {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+.full-article {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px; /* Tambahkan padding untuk konten pada layar kecil */
+}
+
+.full-article h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    word-wrap: break-word; /* Memastikan judul panjang tidak overflow */
+}
+
+.full-article .post-meta {
+    margin-bottom: 1.5rem;
+}
+
+.full-article .post-image {
+    width: 100%;
+    margin-bottom: 2rem;
+    overflow: hidden;
+    max-height: 600px;
+}
+
+.full-article .post-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
+
+.full-article .post-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    word-wrap: break-word; /* Memastikan teks panjang tidak overflow */
+    overflow-wrap: break-word; /* Untuk browser yang lebih baru */
+    hyphens: auto; /* Memungkinkan pemisahan kata jika diperlukan */
+}
+
+/* Tambahkan gaya untuk elemen dalam konten artikel */
+.full-article .post-content p,
+.full-article .post-content h2,
+.full-article .post-content h3,
+.full-article .post-content ul,
+.full-article .post-content ol {
+    margin-bottom: 1.5rem;
+}
+
+.full-article .post-content img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1.5rem 0;
+}
+
+/* Gaya untuk kode atau pre-formatted text */
+.full-article .post-content pre,
+.full-article .post-content code {
+    white-space: pre-wrap; /* Memungkinkan wrapping pada kode */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    background-color: #f4f4f4;
+    padding: 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Responsif untuk layar kecil */
+@media (max-width: 768px) {
+    .full-article h1 {
+        font-size: 2rem;
+    }
+
+    .full-article .post-content {
+        font-size: 1rem;
+    }
+}
+
+/* Menghapus gaya default untuk link */
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Memperbaiki tampilan post */
+.post {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.post-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.post-text {
+    flex: 1 1 65%;
+    padding-right: 1rem;
+    min-width: 0; /* Penting untuk text-overflow bekerja dengan flexbox */
+}
+
+.post-text h2 {
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.post-text p {
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Batasi menjadi 3 baris */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5em;
+    max-height: 4.5em; /* 3 baris * 1.5em line-height */
+}
+
+.post-image {
+    flex: 0 0 30%;
+    max-width: 30%;
+    height: 150px; /* Sesuaikan tinggi ini */
+    overflow: hidden;
+    margin-left: 1rem;
+}
+
+.post-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 4px;
+}
+
+.post h2 {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.post p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.post-info .status {
+    font-weight: bold;
+    color: #007bff;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.pagination .btn {
+    margin: 0 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+}
+
+.pagination .btn.active {
+    background-color: #292929;
+    color: white;
 }
