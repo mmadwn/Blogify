@@ -1,4 +1,4 @@
-require('dotenv').config();
+const dotenv = require('dotenv');
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
@@ -9,7 +9,7 @@ const app = express();
 const port = 3000;
 const apiUrl = 'http://localhost:4000/api';
 
-// Konfigurasi penyimpanan dan filter file
+// Configure storage and file filter
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'public/uploads/');
@@ -21,11 +21,11 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  // Cek tipe file
+  // Check file type
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error('Hanya file gambar yang diizinkan!'), false);
+    cb(new Error('Only image files are allowed!'), false);
   }
 };
 
@@ -33,7 +33,7 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // Batasi ukuran file menjadi 5MB
+    fileSize: 5 * 1024 * 1024, // Limit file size to 5MB
   }
 });
 
@@ -42,27 +42,46 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-// Hapus middleware untuk memeriksa localStorage karena tidak diperlukan di sisi server
+// Debugging: Check if the API key is loaded correctly
+dotenv.config();
+
+// Middleware to set TinyMCE API key
 app.use((req, res, next) => {
   res.locals.TINYMCE_API_KEY = process.env.TINYMCE_API_KEY;
+  console.log('TinyMCE API Key:', res.locals.TINYMCE_API_KEY); // Debugging
   next();
 });
 
-app.get('/', async (req, page, res) => {
+app.get('/', async (req, res) => { // Remove 'page' from parameters
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 10; // Jumlah artikel per halaman
+    const limit = 10; // Number of articles per page
     const response = await axios.get(`${apiUrl}/articles?page=${page}&limit=${limit}`);
+    
+    // Check if response.data has the expected structure
+    if (!response.data || !response.data.articles) {
+      throw new Error('Articles data not found in API response');
+    }
+
     const { articles, totalPages, currentPage } = response.data;
+
+    // Get trending posts
+    const trendingResponse = await axios.get(`${apiUrl}/articles`);
+    if (!trendingResponse.data || !trendingResponse.data.articles) {
+      throw new Error('Trending articles data not found in API response');
+    }
+    const trendingPosts = trendingResponse.data.articles.slice(0, 3); // Get top 3 articles
+
     res.render('index', { 
       posts: articles, 
       currentPage,
       totalPages,
-      title: 'Blogify - Inspirasi Tanpa Batas'
+      title: 'Blogify - Inspiration Without Limits',
+      trendingPosts // Add trendingPosts to render
     });
   } catch (error) {
-    console.error('Error fetching articles:', error);
-    renderErrorWithSweetAlert(res, 'Terjadi kesalahan saat mengambil artikel');
+    console.error('Error fetching articles:', error.message); // Display error message
+    renderErrorWithSweetAlert(res, 'An error occurred while fetching articles: ' + error.message); // Display error message
   }
 });
 
@@ -70,26 +89,26 @@ app.get('/create', async (req, res) => {
   try {
     const response = await axios.get(`${apiUrl}/articles`);
     const trendingPosts = response.data.slice(0, 3);
-    res.render('create', { trendingPosts });
+    res.render('create', { trendingPosts }); // Ensure trendingPosts is defined
   } catch (error) {
     console.error('Error fetching trending posts:', error);
-    res.render('create', { trendingPosts: [] });
+    res.render('create', { trendingPosts: [] }); // Still send trendingPosts even if empty
   }
 });
 
-// Modifikasi route untuk membuat artikel baru
+// Modify route to create a new article
 app.post('/create', upload.single('image'), async (req, res) => {
   console.log('Received form data:', req.body);
   console.log('Received file:', req.file);
-  console.log('Received content:', req.body.content); // Log konten dari TinyMCE
+  console.log('Received content:', req.body.content); // Log content from TinyMCE
 
   try {
     if (req.file) {
-      // Validasi ukuran gambar
+      // Validate image size
       const sizeOf = require('image-size');
       const dimensions = sizeOf(req.file.path);
       if (dimensions.width < 800 || dimensions.height < 600) {
-        fs.unlinkSync(req.file.path); // Hapus file jika tidak memenuhi syarat
+        fs.unlinkSync(req.file.path); // Delete file if it doesn't meet requirements
         throw new Error('Image size must be at least 800x600 pixels');
       }
     }
@@ -113,11 +132,11 @@ app.post('/create', upload.single('image'), async (req, res) => {
 
     const response = await axios.post(`${apiUrl}/articles`, articleData);
     console.log('API response:', response.data);
-    res.redirect('/'); // Ganti dengan redirect ke halaman utama
+    res.redirect('/'); // Redirect to the main page
 
   } catch (error) {
     console.error('Error creating article:', error);
-    renderErrorWithSweetAlert(res, 'Terjadi kesalahan saat membuat artikel');
+    renderErrorWithSweetAlert(res, 'An error occurred while creating the article');
   }
 });
 
@@ -125,7 +144,7 @@ app.get('/edit/:id', async (req, res) => {
   try {
     const response = await axios.get(`${apiUrl}/articles/${req.params.id}`);
     const post = response.data;
-    res.render('edit', { post, trendingPosts: [] }); // Tambahkan trendingPosts jika diperlukan
+    res.render('edit', { post, trendingPosts: [] }); // Add trendingPosts if needed
   } catch (error) {
     console.error('Error fetching article for edit:', error);
     res.redirect('/');
@@ -137,17 +156,17 @@ app.post('/edit/:id', upload.single('image'), async (req, res) => {
   console.log('Received file for edit:', req.file);
 
   try {
-    // Validasi gambar jika ada
+    // Validate image if present
     if (req.file) {
       const sizeOf = require('image-size');
       const dimensions = sizeOf(req.file.path);
       if (dimensions.width < 800 || dimensions.height < 600) {
         fs.unlinkSync(req.file.path);
-        throw new Error('Ukuran gambar minimal harus 800x600 piksel');
+        throw new Error('Minimum image size must be 800x600 pixels');
       }
     }
 
-    // Hapus gambar lama jika ada gambar baru
+    // Delete old image if a new image is uploaded
     if (req.file && req.body.currentImage) {
       const oldImagePath = path.join(__dirname, 'public', req.body.currentImage);
       fs.unlink(oldImagePath, (err) => {
@@ -177,7 +196,7 @@ app.post('/edit/:id', upload.single('image'), async (req, res) => {
 
   } catch (error) {
     console.error('Error updating article:', error);
-    renderErrorWithSweetAlert(res, 'Terjadi kesalahan saat memperbarui artikel');
+    renderErrorWithSweetAlert(res, 'An error occurred while updating the article');
   }
 });
 
@@ -190,9 +209,9 @@ app.post('/delete/:id', async (req, res) => {
     if (error.response) {
       res.status(error.response.status).send(error.response.data);
     } else if (error.request) {
-      res.status(500).send('Tidak dapat terhubung ke server API');
+      res.status(500).send('Unable to connect to the API server');
     } else {
-      res.status(500).send('Terjadi kesalahan saat menghapus artikel');
+      res.status(500).send('An error occurred while deleting the article');
     }
   }
 });
@@ -205,7 +224,7 @@ app.get('/article/:id', async (req, res) => {
     
     console.log('Article data:', articleResponse.data);
     const article = articleResponse.data;
-    const trendingPosts = trendingResponse.data.articles.slice(0, 3);
+    const trendingPosts = trendingResponse.data.articles.slice(0, 3); // Ensure trendingPosts is defined
     
     if (!article) {
       throw new Error('Article not found');
@@ -214,12 +233,12 @@ app.get('/article/:id', async (req, res) => {
     res.render('article', { article, trendingPosts, title: article.title });
   } catch (error) {
     console.error('Error fetching article:', error);
-    res.status(404).render('error', { message: 'Artikel tidak ditemukan' });
+    res.status(404).render('error', { message: 'Article not found' });
   }
 });
 
 app.listen(port, () => {
-  console.log(`Blogify berjalan di http://localhost:${port}`);
+  console.log(`Blogify running at http://localhost:${port}`);
 });
 
 function renderErrorWithSweetAlert(res, message) {

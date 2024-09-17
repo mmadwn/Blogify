@@ -494,7 +494,6 @@ aside ul li a:hover {
     line-height: 1.8;
     word-wrap: break-word; /* Memastikan teks panjang tidak overflow */
     overflow-wrap: break-word; /* Untuk browser yang lebih baru */
-    hyphens: auto; /* Memungkinkan pemisahan kata jika diperlukan */
 }
 
 /* Tambahkan gaya untuk elemen dalam konten artikel */
