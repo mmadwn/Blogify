@@ -256,7 +256,7 @@ app.get('/article/:id', async (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-  // console.log(`Blogify running at http://localhost:${port}`); // Log server start message (remove in production)
+  console.log(`Blogify running at http://localhost:${port}`); // Log server start message (remove in production)
 });
 
 // Function to render error page with SweetAlert
