@@ -55,6 +55,21 @@ app.use((req, res, next) => {
   next();
 });
 
+// Validation function
+const validateArticleData = (data) => {
+  const errors = [];
+  if (!data.title || data.title.trim().length < 5) {
+    errors.push('Title must be at least 5 characters long');
+  }
+  if (!data.author || data.author.trim().length < 3) {
+    errors.push('Author name must be at least 3 characters long');
+  }
+  if (!data.content || data.content.trim().length < 20) {
+    errors.push('Content must be at least 20 characters long');
+  }
+  return errors;
+};
+
 // Centralized error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack); // Log the error stack trace
@@ -71,8 +86,15 @@ const fetchTrendingPosts = async () => {
 app.get('/', async (req, res) => { // Remove 'page' from parameters
   try {
     const page = parseInt(req.query.page) || 1; // Get the current page from query parameters
+    const searchQuery = req.query.search || ''; // Get search query
     const limit = 10; // Number of articles per page
-    const response = await axios.get(`${apiUrl}/articles?page=${page}&limit=${limit}`); // Fetch articles from the API
+
+    let url = `${apiUrl}/articles?page=${page}&limit=${limit}`;
+    if (searchQuery) {
+      url += `&search=${searchQuery}`;
+    }
+
+    const response = await axios.get(url); // Fetch articles from the API
     
     // Check if response.data has the expected structure
     if (!response.data || !response.data.articles) {
@@ -89,7 +111,8 @@ app.get('/', async (req, res) => { // Remove 'page' from parameters
       currentPage,
       totalPages,
       title: 'Blogify - Inspiration Without Limits',
-      trendingPosts // Add trendingPosts to render
+      trendingPosts, // Add trendingPosts to render
+      searchQuery // Pass search query to view
     });
   } catch (error) {
     // console.error('Error fetching articles:', error.message); // Log error message (remove in production)
@@ -251,6 +274,22 @@ app.get('/article/:id', async (req, res) => {
   } catch (error) {
     // console.error('Error fetching article:', error); // Log error (remove in production)
     res.status(404).render('error', { message: 'Article not found' }); // Render error page if article not found
+  }
+});
+
+// Route to handle comment submission
+app.post('/article/:id/comment', async (req, res) => {
+  try {
+    const { name, email, content } = req.body;
+    await axios.post(`${apiUrl}/articles/${req.params.id}/comments`, {
+      name,
+      email,
+      content
+    });
+    res.redirect(`/article/${req.params.id}`);
+  } catch (error) {
+    // console.error('Error adding comment:', error);
+    renderErrorWithSweetAlert(res, 'An error occurred while adding the comment');
   }
 });
 

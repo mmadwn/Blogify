@@ -19,10 +19,10 @@
       <nav>
         <div class="left-nav">
           <a href="/" class="logo">Blogify</a>
-          <div class="search-container">
-            <input type="text" placeholder="Search" class="search-input">
+          <form action="/" method="GET" class="search-container">
+            <input type="text" name="search" placeholder="Search" class="search-input" value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
             <button type="submit" class="search-button"><i class="fas fa-search" style="color: #292929;"></i></button>
-          </div>
+          </form>
         </div>
         <ul class="center-nav">
           <li class="dropdown">
