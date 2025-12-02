@@ -26,12 +26,14 @@
                         <span class="views">Views: <%= post.views || 0 %></span>
                         <!-- Hapus tampilan status -->
                     </div>
+                    <% if (typeof user !== 'undefined' && user) { %>
                     <div class="actions">
                         <a href="/edit/<%= post.id %>" class="btn edit">Edit</a>
                         <form action="/delete/<%= post.id %>" method="POST" class="delete-form">
                             <button type="submit" class="btn delete">Delete</button>
                         </form>
                     </div>
+                    <% } %>
                 </article>
             <% }) %>
         </div>
