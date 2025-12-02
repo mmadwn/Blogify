@@ -6,38 +6,64 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
-
-const dataFilePath = path.join(__dirname, 'data', 'articles.json');
-
-// Helper function to read articles from JSON file
-const readArticles = () => {
-  try {
-    const data = fs.readFileSync(dataFilePath, 'utf8');
-    return JSON.parse(data);
-  } catch (err) {
-    console.error('Error reading articles file:', err);
-    return [];
-  }
-};
-
-// Helper function to write articles to JSON file
-const writeArticles = (articles) => {
-  try {
-    fs.writeFileSync(dataFilePath, JSON.stringify(articles, null, 2), 'utf8');
-  } catch (err) {
-    console.error('Error writing to articles file:', err);
-  }
-};
+const AsyncLock = require('async-lock');
 
 const app = express();
 const port = 4000;
+const DATA_FILE = path.join(__dirname, 'data', 'articles.json');
+const lock = new AsyncLock();
 
 // Middleware setup
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Helper function to read articles from JSON file
+const getArticles = async () => {
+  return await lock.acquire('articles', async () => {
+    try {
+      const data = await fs.readFile(DATA_FILE, 'utf8');
+      return JSON.parse(data);
+    } catch (err) {
+      console.error('Error reading data file:', err);
+      return [];
+    }
+  });
+};
+
+// Helper function to save articles to JSON file
+const saveArticles = async (articles) => {
+  // Lock is already acquired by the caller in the current design (POST/PUT/DELETE)
+  // But since getArticles now locks, we need to be careful about deadlocks if we call getArticles inside a lock.
+  // Actually, AsyncLock is not reentrant by default.
+  // Strategy:
+  // 1. Separate "read file" and "write file" primitives that don't lock.
+  // 2. Wrap high-level operations in locks.
+
+  try {
+    const tempFile = `${DATA_FILE}.tmp`;
+    await fs.writeFile(tempFile, JSON.stringify(articles, null, 2));
+    await fs.rename(tempFile, DATA_FILE);
+    return true;
+  } catch (err) {
+    console.error('Error writing to data file:', err);
+    return false;
+  }
+};
+
+// Primitives without locks
+const _readArticles = async () => {
+    try {
+        const data = await fs.readFile(DATA_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (err) {
+        if (err.code === 'ENOENT') return [];
+        console.error('Error reading data file:', err);
+        return [];
+    }
+};
 
 /**
  * GET /api/articles
@@ -46,61 +72,51 @@ app.use(bodyParser.urlencoded({ extended: true }));
  * @param {number} limit - The number of articles per page (default: 10)
  * @returns {Object} Paginated articles data
  */
-app.get('/api/articles', (req, res) => {
-  const articles = readArticles();
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const startIndex = (page - 1) * limit;
-  const endIndex = page * limit;
+app.get('/api/articles', async (req, res) => {
+    // For read-only, we can just read. Atomic rename ensures we get either old or new version, not partial.
+    // So lock might not be strictly necessary for simple read if we use atomic write.
+    // But to be safe and consistent with "Read-Modify-Write" logic elsewhere, let's use the lock if we want strong consistency,
+    // OR just rely on atomic write for file integrity.
+    // Given the previous review concern about "read while write", atomic write solves the "partial file" issue.
+    // So _readArticles is safe to call without lock if we use atomic writes.
 
-  const results = {};
-  results.totalPages = Math.ceil(articles.length / limit);
-  results.currentPage = page;
+    const articles = await _readArticles();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search ? req.query.search.toLowerCase() : null;
 
-  if (endIndex < articles.length) {
-    results.next = {
-      page: page + 1,
-      limit: limit
-    };
-  }
+    let filteredArticles = articles;
 
-  if (startIndex > 0) {
-    results.previous = {
-      page: page - 1,
-      limit: limit
-    };
-  }
+    if (search) {
+        filteredArticles = articles.filter(article =>
+            article.title.toLowerCase().includes(search) ||
+            article.content.toLowerCase().includes(search)
+        );
+    }
 
-  // Search feature
-  const searchQuery = req.query.search;
-  let filteredArticles = articles;
-  if (searchQuery) {
-    const lowerCaseQuery = searchQuery.toLowerCase();
-    filteredArticles = articles.filter(article =>
-      article.title.toLowerCase().includes(lowerCaseQuery) ||
-      article.content.toLowerCase().includes(lowerCaseQuery)
-    );
-  }
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
 
-  results.totalPages = Math.ceil(filteredArticles.length / limit);
-  results.currentPage = page;
+    const results = {};
+    results.totalPages = Math.ceil(filteredArticles.length / limit);
+    results.currentPage = page;
 
-  if (endIndex < filteredArticles.length) {
-    results.next = {
-      page: page + 1,
-      limit: limit
-    };
-  }
+    if (endIndex < filteredArticles.length) {
+        results.next = {
+        page: page + 1,
+        limit: limit
+        };
+    }
 
-  if (startIndex > 0) {
-    results.previous = {
-      page: page - 1,
-      limit: limit
-    };
-  }
+    if (startIndex > 0) {
+        results.previous = {
+        page: page - 1,
+        limit: limit
+        };
+    }
 
-  results.articles = filteredArticles.slice(startIndex, endIndex);
-  res.json(results);
+    results.articles = filteredArticles.slice(startIndex, endIndex);
+    res.json(results);
 });
 
 /**
@@ -109,18 +125,30 @@ app.get('/api/articles', (req, res) => {
  * @param {Object} req.body - The article data
  * @returns {Object} The created article
  */
-app.post('/api/articles', (req, res) => {
-  const articles = readArticles();
-  const newArticle = {
-    id: (articles.length > 0 ? Math.max(...articles.map(a => parseInt(a.id))) + 1 : 1).toString(),
-    ...req.body,
-    createdAt: new Date().toISOString(),
-    views: 0,
-    comments: []
-  };
-  articles.push(newArticle);
-  writeArticles(articles);
-  res.status(201).json(newArticle);
+app.post('/api/articles', async (req, res) => {
+  // Validate input
+  if (!req.body.title || !req.body.content) {
+      return res.status(400).json({ message: 'Title and content are required' });
+  }
+
+  try {
+    await lock.acquire('articles', async () => {
+      const articles = await _readArticles();
+
+      const newArticle = {
+        id: Date.now().toString(), // Standardized ID generation
+        ...req.body,
+        createdAt: new Date().toISOString(),
+        views: 0
+      };
+      articles.push(newArticle);
+      await saveArticles(articles);
+      res.status(201).json(newArticle);
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to save article' });
+  }
 });
 
 /**
@@ -129,8 +157,8 @@ app.post('/api/articles', (req, res) => {
  * @param {string} id - The article ID
  * @returns {Object} The requested article or 404 if not found
  */
-app.get('/api/articles/:id', (req, res) => {
-  const articles = readArticles();
+app.get('/api/articles/:id', async (req, res) => {
+  const articles = await _readArticles();
   const article = articles.find(a => a.id === req.params.id);
   if (article) {
     res.json(article);
@@ -146,15 +174,21 @@ app.get('/api/articles/:id', (req, res) => {
  * @param {Object} req.body - The updated article data
  * @returns {Object} The updated article or 404 if not found
  */
-app.put('/api/articles/:id', (req, res) => {
-  const articles = readArticles();
-  const index = articles.findIndex(a => a.id === req.params.id);
-  if (index !== -1) {
-    articles[index] = { ...articles[index], ...req.body };
-    writeArticles(articles);
-    res.json(articles[index]);
-  } else {
-    res.status(404).json({ message: 'Article not found' });
+app.put('/api/articles/:id', async (req, res) => {
+  try {
+    await lock.acquire('articles', async () => {
+      const articles = await _readArticles();
+      const index = articles.findIndex(a => a.id === req.params.id);
+      if (index !== -1) {
+        articles[index] = { ...articles[index], ...req.body };
+        await saveArticles(articles);
+        res.json(articles[index]);
+      } else {
+        res.status(404).json({ message: 'Article not found' });
+      }
+    });
+  } catch (err) {
+      res.status(500).json({ message: 'Failed to update article' });
   }
 });
 
@@ -164,15 +198,21 @@ app.put('/api/articles/:id', (req, res) => {
  * @param {string} id - The article ID
  * @returns {undefined} 204 No Content on success, or 404 if not found
  */
-app.delete('/api/articles/:id', (req, res) => {
-  const articles = readArticles();
-  const index = articles.findIndex(a => a.id === req.params.id);
-  if (index !== -1) {
-    articles.splice(index, 1);
-    writeArticles(articles);
-    res.status(204).send();
-  } else {
-    res.status(404).json({ message: 'Article not found' });
+app.delete('/api/articles/:id', async (req, res) => {
+  try {
+    await lock.acquire('articles', async () => {
+      const articles = await _readArticles();
+      const index = articles.findIndex(a => a.id === req.params.id);
+      if (index !== -1) {
+        articles.splice(index, 1);
+        await saveArticles(articles);
+        res.status(204).send();
+      } else {
+        res.status(404).json({ message: 'Article not found' });
+      }
+    });
+  } catch (err) {
+      res.status(500).json({ message: 'Failed to delete article' });
   }
 });
 
@@ -180,29 +220,43 @@ app.delete('/api/articles/:id', (req, res) => {
  * POST /api/articles/:id/comments
  * Adds a comment to an article
  * @param {string} id - The article ID
- * @param {Object} req.body - The comment data { name, email, content }
- * @returns {Object} The added comment
+ * @param {Object} req.body - The comment data
+ * @returns {Object} The updated article or 404 if not found
  */
-app.post('/api/articles/:id/comments', (req, res) => {
-  const articles = readArticles();
-  const index = articles.findIndex(a => a.id === req.params.id);
-  if (index !== -1) {
-    const comment = {
-      id: Date.now().toString(),
-      name: req.body.name,
-      email: req.body.email,
-      content: req.body.content,
-      createdAt: new Date().toISOString()
-    };
-    if (!articles[index].comments) {
-      articles[index].comments = [];
+app.post('/api/articles/:id/comments', async (req, res) => {
+    // Validate comment input
+    if (!req.body.name || !req.body.text) {
+        return res.status(400).json({ message: 'Name and text are required for comments' });
     }
-    articles[index].comments.push(comment);
-    writeArticles(articles);
-    res.status(201).json(comment);
-  } else {
-    res.status(404).json({ message: 'Article not found' });
-  }
+
+    try {
+        await lock.acquire('articles', async () => {
+            const articles = await _readArticles();
+            const index = articles.findIndex(a => a.id === req.params.id);
+
+            if (index !== -1) {
+                if (!articles[index].comments) {
+                    articles[index].comments = [];
+                }
+
+                const newComment = {
+                    id: Date.now().toString(),
+                    name: req.body.name,
+                    text: req.body.text,
+                    createdAt: new Date().toISOString()
+                };
+
+                articles[index].comments.push(newComment);
+
+                await saveArticles(articles);
+                res.status(201).json(newComment);
+            } else {
+                res.status(404).json({ message: 'Article not found' });
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to save comment' });
+    }
 });
 
 /**
@@ -216,6 +270,10 @@ app.use((err, req, res, next) => {
 /**
  * Start the server
  */
-app.listen(port, () => {
-  console.log(`API server berjalan di http://localhost:${port}`);
-});
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`API server berjalan di http://localhost:${port}`);
+  });
+}
+
+module.exports = app;

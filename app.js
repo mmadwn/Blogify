@@ -4,6 +4,7 @@ const bodyParser = require('body-parser'); // Middleware for parsing request bod
 const path = require('path'); // Node.js path module for handling file paths
 const axios = require('axios'); // Promise-based HTTP client for making requests
 const multer = require('multer'); // Middleware for handling multipart/form-data, used for file uploads
+const fs = require('fs'); // Import filesystem module
 
 const app = express(); // Create an Express application
 const port = 3000; // Define the port for the server
@@ -55,21 +56,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Validation function
-const validateArticleData = (data) => {
-  const errors = [];
-  if (!data.title || data.title.trim().length < 5) {
-    errors.push('Title must be at least 5 characters long');
-  }
-  if (!data.author || data.author.trim().length < 3) {
-    errors.push('Author name must be at least 3 characters long');
-  }
-  if (!data.content || data.content.trim().length < 20) {
-    errors.push('Content must be at least 20 characters long');
-  }
-  return errors;
-};
-
 // Centralized error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack); // Log the error stack trace
@@ -86,15 +72,16 @@ const fetchTrendingPosts = async () => {
 app.get('/', async (req, res) => { // Remove 'page' from parameters
   try {
     const page = parseInt(req.query.page) || 1; // Get the current page from query parameters
-    const searchQuery = req.query.search || ''; // Get search query
     const limit = 10; // Number of articles per page
+    const search = req.query.search || ''; // Get search query
 
-    let url = `${apiUrl}/articles?page=${page}&limit=${limit}`;
-    if (searchQuery) {
-      url += `&search=${searchQuery}`;
-    }
-
-    const response = await axios.get(url); // Fetch articles from the API
+    const response = await axios.get(`${apiUrl}/articles`, {
+      params: {
+        page,
+        limit,
+        search
+      }
+    }); // Fetch articles from the API
     
     // Check if response.data has the expected structure
     if (!response.data || !response.data.articles) {
@@ -112,7 +99,7 @@ app.get('/', async (req, res) => { // Remove 'page' from parameters
       totalPages,
       title: 'Blogify - Inspiration Without Limits',
       trendingPosts, // Add trendingPosts to render
-      searchQuery // Pass search query to view
+      search // Pass search term to view
     });
   } catch (error) {
     // console.error('Error fetching articles:', error.message); // Log error message (remove in production)
@@ -159,7 +146,13 @@ app.post('/create', upload.single('image'), async (req, res) => {
       createdAt: new Date().toISOString() // Set creation date
     };
 
-    const errors = validateArticleData(articleData); // Validate article data
+    const errors = [];
+    if (!articleData.title || articleData.title.trim().length === 0) errors.push('Title is required');
+    if (!articleData.author || articleData.author.trim().length === 0) errors.push('Author is required');
+    if (!articleData.category || articleData.category.trim().length === 0) errors.push('Category is required');
+    if (!articleData.content || articleData.content.trim().length === 0) errors.push('Content is required');
+    if (!articleData.excerpt || articleData.excerpt.trim().length === 0) errors.push('Excerpt is required');
+
     if (errors.length > 0) {
       return res.status(400).render('error', { message: errors.join(', ') }); // Render error if validation fails
     }
@@ -221,7 +214,13 @@ app.post('/edit/:id', upload.single('image'), async (req, res) => {
       image: req.file ? `/uploads/${req.file.filename}` : req.body.currentImage, // Set image path
     };
 
-    const errors = validateArticleData(articleData); // Validate article data
+    const errors = [];
+    if (!articleData.title || articleData.title.trim().length === 0) errors.push('Title is required');
+    if (!articleData.author || articleData.author.trim().length === 0) errors.push('Author is required');
+    if (!articleData.category || articleData.category.trim().length === 0) errors.push('Category is required');
+    if (!articleData.content || articleData.content.trim().length === 0) errors.push('Content is required');
+    if (!articleData.excerpt || articleData.excerpt.trim().length === 0) errors.push('Excerpt is required');
+
     if (errors.length > 0) {
       return res.status(400).render('error', { message: errors.join(', ') }); // Render error if validation fails
     }
@@ -255,6 +254,18 @@ app.post('/delete/:id', async (req, res) => {
   }
 });
 
+// Route to handle comment submission
+app.post('/article/:id/comments', async (req, res) => {
+  try {
+    const { name, text } = req.body;
+    await axios.post(`${apiUrl}/articles/${req.params.id}/comments`, { name, text });
+    res.redirect(`/article/${req.params.id}`);
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    renderErrorWithSweetAlert(res, 'An error occurred while adding the comment');
+  }
+});
+
 // Route to fetch and render a single article
 app.get('/article/:id', async (req, res) => {
   // console.log(`Attempting to fetch article with id: ${req.params.id}`); // Log article ID being fetched (remove in production)
@@ -274,22 +285,6 @@ app.get('/article/:id', async (req, res) => {
   } catch (error) {
     // console.error('Error fetching article:', error); // Log error (remove in production)
     res.status(404).render('error', { message: 'Article not found' }); // Render error page if article not found
-  }
-});
-
-// Route to handle comment submission
-app.post('/article/:id/comment', async (req, res) => {
-  try {
-    const { name, email, content } = req.body;
-    await axios.post(`${apiUrl}/articles/${req.params.id}/comments`, {
-      name,
-      email,
-      content
-    });
-    res.redirect(`/article/${req.params.id}`);
-  } catch (error) {
-    // console.error('Error adding comment:', error);
-    renderErrorWithSweetAlert(res, 'An error occurred while adding the comment');
   }
 });
 
