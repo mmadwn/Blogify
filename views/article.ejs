@@ -16,6 +16,45 @@
             <div class="post-content">
                 <%- article.content %>
             </div>
+
+            <section class="comments-section">
+                <h3>Comments (<%= article.comments ? article.comments.length : 0 %>)</h3>
+
+                <% if (article.comments && article.comments.length > 0) { %>
+                    <div class="comments-list">
+                        <% article.comments.forEach(comment => { %>
+                            <div class="comment">
+                                <div class="comment-header">
+                                    <span class="comment-author"><%= comment.name %></span>
+                                    <span class="comment-date"><%= new Date(comment.createdAt).toLocaleDateString() %></span>
+                                </div>
+                                <p class="comment-content"><%= comment.content %></p>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <p>No comments yet. Be the first to comment!</p>
+                <% } %>
+
+                <div class="comment-form-container">
+                    <h3>Leave a Comment</h3>
+                    <form action="/article/<%= article.id %>/comment" method="POST" class="comment-form">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="content">Comment</label>
+                            <textarea id="content" name="content" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" class="btn">Submit Comment</button>
+                    </form>
+                </div>
+            </section>
         </article>
     </main>
     <aside>
