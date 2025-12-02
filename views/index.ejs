@@ -2,6 +2,13 @@
 <div class="container main-content">
     <main>
         
+        <% if (locals.currentCategory) { %>
+            <div class="category-header">
+                <h2>Category: <%= currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1) %></h2>
+                <a href="/" class="btn-text">View All Posts</a>
+            </div>
+        <% } %>
+
         <div class="posts">
             <% posts.forEach(post => { %>
                 <article class="post">
@@ -26,12 +33,14 @@
                         <span class="views">Views: <%= post.views || 0 %></span>
                         <!-- Hapus tampilan status -->
                     </div>
+                    <% if (locals.user) { %>
                     <div class="actions">
                         <a href="/edit/<%= post.id %>" class="btn edit">Edit</a>
                         <form action="/delete/<%= post.id %>" method="POST" class="delete-form">
                             <button type="submit" class="btn delete">Delete</button>
                         </form>
                     </div>
+                    <% } %>
                 </article>
             <% }) %>
         </div>

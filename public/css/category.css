@@ -1,0 +1,26 @@
+.category-header {
+    background-color: #f9f9f9;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-radius: 8px;
+    border-left: 5px solid #292929;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.category-header h2 {
+    margin: 0;
+    color: #292929;
+    font-size: 1.8rem;
+}
+
+.category-header .btn-text {
+    color: #555;
+    text-decoration: underline;
+    font-size: 0.9rem;
+}
+
+.category-header .btn-text:hover {
+    color: #000;
+}

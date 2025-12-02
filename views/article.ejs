@@ -16,7 +16,51 @@
             <div class="post-content">
                 <%- article.content %>
             </div>
+            <% if (locals.user) { %>
+            <div class="actions" style="margin-top: 2rem;">
+                <a href="/edit/<%= article.id %>" class="btn edit">Edit</a>
+                <form action="/delete/<%= article.id %>" method="POST" class="delete-form" style="display: inline;">
+                    <button type="submit" class="btn delete">Delete</button>
+                </form>
+            </div>
+            <% } %>
         </article>
+
+        <section class="comments-section">
+            <h3>Comments</h3>
+            <% if (article.comments && article.comments.length > 0) { %>
+                <div class="comments-list">
+                    <% article.comments.forEach(comment => { %>
+                        <div class="comment">
+                            <div class="comment-header">
+                                <strong><%= comment.author %></strong>
+                                <span class="date"><%= new Date(comment.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
+                            </div>
+                            <div class="comment-body">
+                                <p><%= comment.content %></p>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } else { %>
+                <p>No comments yet. Be the first to comment!</p>
+            <% } %>
+
+            <div class="comment-form">
+                <h4>Leave a Comment</h4>
+                <form action="/article/<%= article.id %>/comment" method="POST">
+                    <div class="form-group">
+                        <label for="author">Name</label>
+                        <input type="text" id="author" name="author" placeholder="Your Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="content">Comment</label>
+                        <textarea id="content" name="content" rows="4" placeholder="Your Comment" required></textarea>
+                    </div>
+                    <button type="submit" class="btn">Submit Comment</button>
+                </form>
+            </div>
+        </section>
     </main>
     <aside>
         <section class="trending">

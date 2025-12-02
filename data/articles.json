@@ -1,0 +1,29 @@
+[
+  {
+    "id": "1",
+    "title": "Test Article 1",
+    "content": "Content 1",
+    "category": "test",
+    "author": "Tester",
+    "createdAt": "2025-12-02T02:48:09.072Z",
+    "views": 0,
+    "comments": []
+  },
+  {
+    "id": "1764643689127",
+    "title": "New Article",
+    "content": "New Content",
+    "category": "test",
+    "author": "Tester",
+    "createdAt": "2025-12-02T02:48:09.127Z",
+    "views": 1,
+    "comments": [
+      {
+        "id": "1764643689136",
+        "author": "Commenter",
+        "content": "Nice post!",
+        "createdAt": "2025-12-02T02:48:09.136Z"
+      }
+    ]
+  }
+]
