@@ -4,6 +4,7 @@ const bodyParser = require('body-parser'); // Middleware for parsing request bod
 const path = require('path'); // Node.js path module for handling file paths
 const axios = require('axios'); // Promise-based HTTP client for making requests
 const multer = require('multer'); // Middleware for handling multipart/form-data, used for file uploads
+const session = require('express-session');
 
 const app = express(); // Create an Express application
 const port = 3000; // Define the port for the server
@@ -48,12 +49,36 @@ app.set('view engine', 'ejs'); // Set EJS as the templating engine
 // Load environment variables from .env file
 dotenv.config();
 
-// Middleware to set TinyMCE API key in response locals
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'secret-key',
+  resave: false,
+  saveUninitialized: true
+}));
+
+// Middleware to set local variables
 app.use((req, res, next) => {
   res.locals.TINYMCE_API_KEY = process.env.TINYMCE_API_KEY; // Set API key for TinyMCE
-  // console.log('TinyMCE API Key:', res.locals.TINYMCE_API_KEY); // Debugging: Log the API key (remove in production)
+  res.locals.user = req.session.user; // Set user for templates
   next();
 });
+
+// Authentication Middleware
+const isAuthenticated = (req, res, next) => {
+  if (req.session.user) {
+    next();
+  } else {
+    res.redirect('/login');
+  }
+};
+
+// Validation Helper
+const validateArticleData = (data) => {
+  const errors = [];
+  if (!data.title || data.title.trim() === '') errors.push('Title is required');
+  if (!data.author || data.author.trim() === '') errors.push('Author is required');
+  if (!data.content || data.content.trim() === '') errors.push('Content is required');
+  return errors;
+};
 
 // Centralized error handling middleware
 app.use((err, req, res, next) => {
@@ -72,7 +97,8 @@ app.get('/', async (req, res) => { // Remove 'page' from parameters
   try {
     const page = parseInt(req.query.page) || 1; // Get the current page from query parameters
     const limit = 10; // Number of articles per page
-    const response = await axios.get(`${apiUrl}/articles?page=${page}&limit=${limit}`); // Fetch articles from the API
+    const search = req.query.q || '';
+    const response = await axios.get(`${apiUrl}/articles?page=${page}&limit=${limit}&q=${search}`); // Fetch articles from the API
     
     // Check if response.data has the expected structure
     if (!response.data || !response.data.articles) {
@@ -89,7 +115,8 @@ app.get('/', async (req, res) => { // Remove 'page' from parameters
       currentPage,
       totalPages,
       title: 'Blogify - Inspiration Without Limits',
-      trendingPosts // Add trendingPosts to render
+      trendingPosts, // Add trendingPosts to render
+      search // Pass search query to view
     });
   } catch (error) {
     // console.error('Error fetching articles:', error.message); // Log error message (remove in production)
@@ -97,11 +124,35 @@ app.get('/', async (req, res) => { // Remove 'page' from parameters
   }
 });
 
+// Login Routes
+app.get('/login', (req, res) => {
+  res.render('login', { title: 'Login' });
+});
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  const adminUser = process.env.ADMIN_USERNAME || 'admin';
+  const adminPass = process.env.ADMIN_PASSWORD || 'admin';
+
+  if (username === adminUser && password === adminPass) {
+    req.session.user = { username: adminUser };
+    res.redirect('/');
+  } else {
+    res.render('login', { title: 'Login', error: 'Invalid credentials' });
+  }
+});
+
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+});
+
 // Route to render the create article page
-app.get('/create', async (req, res) => {
+app.get('/create', isAuthenticated, async (req, res) => {
   try {
     const response = await axios.get(`${apiUrl}/articles`); // Fetch articles for trending posts
-    const trendingPosts = response.data.slice(0, 3); // Get top 3 trending posts
+    const trendingPosts = response.data.articles ? response.data.articles.slice(0, 3) : []; // Get top 3 trending posts (FIXED structure access)
     res.render('create', { trendingPosts }); // Render create page with trending posts
   } catch (error) {
     console.error('Error fetching trending posts:', error); // Log error (remove in production)
@@ -110,7 +161,7 @@ app.get('/create', async (req, res) => {
 });
 
 // Route to create a new article
-app.post('/create', upload.single('image'), async (req, res) => {
+app.post('/create', isAuthenticated, upload.single('image'), async (req, res) => {
   // console.log('Received form data:', req.body); // Log received form data (remove in production)
   // console.log('Received file:', req.file); // Log received file (remove in production)
   // console.log('Received content:', req.body.content); // Log content from TinyMCE (remove in production)
@@ -154,7 +205,7 @@ app.post('/create', upload.single('image'), async (req, res) => {
 });
 
 // Route to render the edit article page
-app.get('/edit/:id', async (req, res) => {
+app.get('/edit/:id', isAuthenticated, async (req, res) => {
   try {
     const response = await axios.get(`${apiUrl}/articles/${req.params.id}`); // Fetch article by ID
     const post = response.data; // Get article data
@@ -166,7 +217,7 @@ app.get('/edit/:id', async (req, res) => {
 });
 
 // Route to update an existing article
-app.post('/edit/:id', upload.single('image'), async (req, res) => {
+app.post('/edit/:id', isAuthenticated, upload.single('image'), async (req, res) => {
   // console.log('Received form data for edit:', req.body); // Log received form data (remove in production)
   // console.log('Received file for edit:', req.file); // Log received file (remove in production)
 
@@ -216,7 +267,7 @@ app.post('/edit/:id', upload.single('image'), async (req, res) => {
 });
 
 // Route to delete an article
-app.post('/delete/:id', async (req, res) => {
+app.post('/delete/:id', isAuthenticated, async (req, res) => {
   try {
     await axios.delete(`${apiUrl}/articles/${req.params.id}`); // Delete article via API
     res.redirect('/'); // Redirect to the main page
@@ -230,6 +281,21 @@ app.post('/delete/:id', async (req, res) => {
       res.status(500).send('An error occurred while deleting the article'); // Handle general error
     }
   }
+});
+
+// Route to add a comment
+app.post('/article/:id/comment', async (req, res) => {
+    try {
+        const { name, comment } = req.body;
+        if (!name || !comment) {
+             return res.redirect(`/article/${req.params.id}`);
+        }
+        await axios.post(`${apiUrl}/articles/${req.params.id}/comments`, { name, comment });
+        res.redirect(`/article/${req.params.id}`);
+    } catch (error) {
+        console.error('Error adding comment:', error);
+        res.redirect(`/article/${req.params.id}`);
+    }
 });
 
 // Route to fetch and render a single article
@@ -255,18 +321,10 @@ app.get('/article/:id', async (req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
-  console.log(`Blogify running at http://localhost:${port}`); // Log server start message (remove in production)
-});
-
-// Function to render error page with SweetAlert
-function renderErrorWithSweetAlert(res, message) {
-    res.render('error', { 
-        message,
-        sweetAlert: {
-            icon: 'error',
-            title: 'Oops...',
-            text: message
-        }
-    });
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Blogify running at http://localhost:${port}`); // Log server start message (remove in production)
+  });
 }
+
+module.exports = app;

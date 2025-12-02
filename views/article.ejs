@@ -17,6 +17,38 @@
                 <%- article.content %>
             </div>
         </article>
+
+        <section class="comments-section">
+            <h3>Comments</h3>
+            <% if (article.comments && article.comments.length > 0) { %>
+                <ul class="comments-list">
+                    <% article.comments.forEach(comment => { %>
+                        <li class="comment-item">
+                            <div class="comment-meta">
+                                <strong><%= comment.name %></strong> -
+                                <small><%= new Date(comment.createdAt).toLocaleDateString() %></small>
+                            </div>
+                            <p><%= comment.comment %></p>
+                        </li>
+                    <% }) %>
+                </ul>
+            <% } else { %>
+                <p>No comments yet. Be the first to comment!</p>
+            <% } %>
+
+            <h4>Add a Comment</h4>
+            <form action="/article/<%= article.id %>/comment" method="POST" class="comment-form">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="comment">Comment:</label>
+                    <textarea id="comment" name="comment" required class="form-control" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit Comment</button>
+            </form>
+        </section>
     </main>
     <aside>
         <section class="trending">
